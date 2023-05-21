@@ -1,56 +1,107 @@
-import { useState } from 'react';
-import { trpc } from '../utils/trpc';
+import { useCallback, useEffect, useState } from 'react';
+import { animated, Transition } from 'react-spring';
+import getConfig from 'next/config';
+import { useJSONSockets } from '../hooks';
+import type { HistoryValue } from '../components';
+import { GlobalStyle, HistoryGraph, Loader } from '../components';
+
+const { publicRuntimeConfig } = getConfig();
+
+type TemperatureData = {
+  temperature?: number;
+  timestamp?: string;
+  latestTemperatures?: number[];
+};
 
 export default function IndexPage() {
-  const addMutation = trpc.add.useMutation();
+  const handleTemperatureReceived = useCallback(
+    ({ latestTemperatures, temperature, timestamp }: TemperatureData) => {
+      setTemperature(temperature);
+      setTimestamp(timestamp);
 
-  const [num, setNumber] = useState<number>();
-  trpc.onAdd.useSubscription(undefined, {
-    onData(n) {
-      setNumber(n);
+      if (latestTemperatures && latestTemperatures.length > 0) {
+        setHistoryData(
+          latestTemperatures.map((value: number, idx: number) => ({
+            x: idx + 1,
+            y: value,
+          })),
+        );
+      }
     },
-  });
+    [],
+  );
+
+  const { state } = useJSONSockets<TemperatureData>(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    publicRuntimeConfig.WS_URL!,
+    handleTemperatureReceived,
+  );
+  const [temperature, setTemperature] = useState<number | undefined>(undefined);
+  const [timestamp, setTimestamp] = useState<string | undefined>(undefined);
+  const [historyData, setHistoryData] = useState<HistoryValue[]>([]);
+  const [showData, setShowData] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => setShowData(true), 250);
+  }, [setShowData]);
 
   return (
-    <div>
-      Here&apos;s a random number from a sub: {num}
-      <button
-        onClick={async () => {
-          const temperature = await addMutation.mutate({
-            temperature: 10,
-          });
-
-          console.log({ temperature });
-        }}
+    <>
+      <GlobalStyle temperature={temperature} />
+      <div
+        className="flex flex-col justify-evenly items-center content-center text-white"
+        style={{ width: '100%', height: '100%' }}
       >
-        set temperature
-      </button>
-    </div>
+        {showData && (
+          <Transition
+            items={temperature === undefined}
+            from={{
+              opacity: 0,
+              position: 'absolute',
+            }}
+            enter={{ opacity: 1 }}
+            leave={{ opacity: 0 }}
+          >
+            {(style, showLoader) => (
+              <animated.div style={style}>
+                {showLoader ? (
+                  <Loader state={state} />
+                ) : (
+                  <>
+                    <div>
+                      {temperature && (
+                        <div style={{ fontSize: '30vw' }} className="mb-4">
+                          {formatTemperature(temperature)}
+                        </div>
+                      )}
+                      <div>{formatTimestamp(timestamp)}</div>
+                    </div>
+                    <HistoryGraph points={historyData} />
+                  </>
+                )}
+              </animated.div>
+            )}
+          </Transition>
+        )}
+      </div>
+    </>
   );
 }
 
-/**
- * If you want to statically render this page
- * - Export `appRouter` & `createContext` from [trpc].ts
- * - Make the `opts` object optional on `createContext()`
- *
- * @link https://trpc.io/docs/ssg
- */
-// export const getStaticProps = async (
-//   context: GetStaticPropsContext<{ filter: string }>,
-// ) => {
-//   const ssg = createSSGHelpers({
-//     router: appRouter,
-//     ctx: await createContext(),
-//   });
-//
-//   await ssg.fetchQuery('post.all');
-//
-//   return {
-//     props: {
-//       trpcState: ssg.dehydrate(),
-//       filter: context.params?.filter ?? 'all',
-//     },
-//     revalidate: 1,
-//   };
-// };
+const formatTimestamp = (timestamp?: string): string => {
+  if (!timestamp) {
+    return '';
+  }
+
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const formatTemperature = (value: number): string => {
+  const fixedString = value.toFixed();
+  return (fixedString === '-0' ? '0' : fixedString) + '°';
+};
