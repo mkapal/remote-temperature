@@ -3,7 +3,7 @@
   "version": "10.25.0",
   "private": true,
   "engines": {
-    "node": "^18.15.0"
+    "node": "18"
   },
   "scripts": {
     "build:1-next": "cross-env NODE_ENV=production next build",
