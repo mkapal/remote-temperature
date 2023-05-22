@@ -14,6 +14,8 @@
     "dev": "run-p dev:*",
     "dx": "run-s db-up db-migrate-dev db-seed dev",
     "start": "cross-env NODE_ENV=production node dist/server/prodServer.js",
+    "format": "prettier --write .",
+    "format-check": "prettier --check .",
     "lint": "eslint --cache --ext \".js,.ts,.tsx\" --report-unused-disable-directives --report-unused-disable-directives src",
     "lint-fix": "yarn lint --fix",
     "test-dev": "cross-env APP_ENV=test start-server-and-test dev 3000 test",

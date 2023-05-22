@@ -15,15 +15,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7.26.0
+
       - name: Use Node ${{ matrix.node }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
 
       - name: Install
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install
+        run: pnpm install
 
       - name: Next.js cache
         uses: actions/cache@v3
@@ -31,7 +33,11 @@ jobs:
           path: ${{ github.workspace }}/.next/cache
           key: ${{ runner.os }}-${{ runner.node }}-${{ hashFiles('**/yarn.lock') }}-nextjs
 
+      - name: Check format
+        run: pnpm format-check
+
+      - name: Lint code
+        run: pnpm lint
+
       - name: Build
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: build
+        run: pnpm build
