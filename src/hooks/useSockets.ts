@@ -15,7 +15,7 @@ export const useJSONSockets = <Data>(
       maxAttempts: 5,
       onopen: () => {
         setState('waiting');
-        console.info('Connected');
+        console.info(`Connected to ${serverUrl}`);
       },
       onmessage: (event) => {
         try {
