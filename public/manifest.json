@@ -1,7 +1,7 @@
 {
   "short_name": "Teplota",
   "name": "Teplota U Pahoráka",
-  "start_url":"/",
+  "start_url": "/",
   "display": "standalone",
   "theme_color": "#000",
   "background_color": "#1e5799",
