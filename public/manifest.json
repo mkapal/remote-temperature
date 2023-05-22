@@ -1,0 +1,20 @@
+{
+  "short_name": "Teplota",
+  "name": "Teplota U Pahoráka",
+  "start_url":"/",
+  "display": "standalone",
+  "theme_color": "#000",
+  "background_color": "#1e5799",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
